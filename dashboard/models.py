@@ -15,6 +15,7 @@ class NoteModel(models.Model):
     title = models.CharField(max_length=255, null=False, blank=False)
     notes = models.TextField(null=False, blank=False)
     created = models.DateField(auto_now=True)
+    sharing = models.ManyToManyField(SharingModel)
 
     def __str__(self):
         return f'{self.title} - {self.owner.username}'
