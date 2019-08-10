@@ -60,5 +60,6 @@ def signin_view(request):
             errors = signin_form.errors.as_text()
             if 'username' in errors:
                 errors = errors.replace('username', 'mobile')
+            errors = errors.split('*')[2]
             messages.add_message(request, messages.ERROR, errors)
             return HttpResponseRedirect(reverse('dashboard:signin_page'))
