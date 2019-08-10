@@ -34,3 +34,10 @@ def signup_view(request):
             return HttpResponseRedirect(reverse('dashboard:signup_page'))
 
 
+@require_http_methods(['GET', 'POST'])
+def signin_view(request):
+    if request.method == 'GET':
+        pass
+
+    else:
+        pass
