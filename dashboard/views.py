@@ -37,7 +37,7 @@ def signup_view(request):
 @require_http_methods(['GET', 'POST'])
 def signin_view(request):
     if request.method == 'GET':
-        pass
+        return render(request, 'notes/signin.html')
 
     else:
         pass
