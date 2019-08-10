@@ -25,6 +25,7 @@ def signup_view(request):
         if signup_form.is_valid():
             signup_form.save()
             messages.add_message(request, messages.SUCCESS, 'Success! Log in to continue...')
+            return HttpResponseRedirect(reverse('dashboard:signin_page'))
 
         else:
             errors = signup_form.errors.as_text()
