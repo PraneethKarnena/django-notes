@@ -15,6 +15,10 @@ def home_view(request):
 
 @require_http_methods(['GET', 'POST'])
 def signup_view(request):
+    # If the User is already logged in, redirect to dashboard
+    if request.user.is_authenticated:
+        return HttpResponseRedirect(reverse('dashboard:dashboard_page'))
+
     # GET request, render the page
     if request.method == 'GET':
         return render(request, 'notes/signup.html')
@@ -37,6 +41,10 @@ def signup_view(request):
 
 @require_http_methods(['GET', 'POST'])
 def signin_view(request):
+    # If the User is already logged in, redirect to dashboard
+    if request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('dashboard:dashboard_page'))
+
     if request.method == 'GET':
         return render(request, 'notes/signin.html')
 
