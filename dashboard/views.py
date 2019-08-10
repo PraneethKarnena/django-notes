@@ -54,7 +54,7 @@ def signin_view(request):
         signin_form = AuthenticationForm(request=request, data=request.POST)
         if signin_form.is_valid():
             django_login(request, signin_form.get_user())
-            return HttpResponse('Logged in')
+            return HttpResponseRedirect(reverse('dashboard:dashboard_page'))
 
         else:
             errors = signin_form.errors.as_text()
@@ -63,3 +63,8 @@ def signin_view(request):
             errors = errors.split('*')[2]
             messages.add_message(request, messages.ERROR, errors)
             return HttpResponseRedirect(reverse('dashboard:signin_page'))
+
+
+@require_http_methods(['GET', 'POST'])
+def dashboard_view(request):
+    pass
