@@ -3,6 +3,8 @@ from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.contrib import messages
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import login as django_login
 from . import forms
 
 
@@ -49,4 +51,14 @@ def signin_view(request):
         return render(request, 'notes/signin.html')
 
     else:
-        pass
+        signin_form = AuthenticationForm(request=request, data=request.POST)
+        if signin_form.is_valid():
+            django_login(request, signin_form.get_user())
+            return HttpResponse('Logged in')
+
+        else:
+            errors = signin_form.errors.as_text()
+            if 'username' in errors:
+                errors = errors.replace('username', 'mobile')
+            messages.add_message(request, messages.ERROR, errors)
+            return HttpResponseRedirect(reverse('dashboard:signin_page'))
