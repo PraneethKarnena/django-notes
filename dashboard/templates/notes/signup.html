@@ -18,6 +18,18 @@
                 <h1>Sign up - Notes</h1>
             </div>
         </div>
+        {% if messages %}
+            <div class="row mt-3">
+                <div class="col-lg-1"></div>
+                <div class="col-lg-10 text-center">
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %}" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
         <div class="row mt-3">
             <div class="col-lg-4"></div>
             <div class="col-lg-4 text-center">
