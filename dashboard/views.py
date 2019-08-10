@@ -24,13 +24,13 @@ def signup_view(request):
         signup_form = forms.SignupForm(request.POST)
         if signup_form.is_valid():
             signup_form.save()
+            messages.add_message(request, messages.SUCCESS, 'Success! Log in to continue...')
 
         else:
-            errors = signup_form.errors
-            error_message = ''
-            for k in errors:
-                error_message = error_message + f'{k} - {errors[k]}. '
-            messages.add_message(request, messages.ERROR, error_message)
-            return HttpResponseRedirect('dashboard:signup_page')
+            errors = signup_form.errors.as_text()
+            if 'username' in errors:
+                errors = errors.replace('username', 'mobile')
+            messages.add_message(request, messages.ERROR, errors)
+            return HttpResponseRedirect(reverse('dashboard:signup_page'))
 
 
