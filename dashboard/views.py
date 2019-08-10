@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as django_login
+from django.contrib.auth.decorators import login_required
 from . import forms
 
 
@@ -66,5 +67,6 @@ def signin_view(request):
 
 
 @require_http_methods(['GET', 'POST'])
+@login_required
 def dashboard_view(request):
     pass
