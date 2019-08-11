@@ -10,4 +10,6 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view, name='dashboard_page'),
     path('api/my-notes/', views.my_notes_api, name='my_notes_api'),
     path('api/add-notes/', views.add_notes_api, name='add_notes_api'),
+    path('api/edit-notes/<int:id>/', views.edit_notes_api, name='edit_notes_api'),
+    path('api/delete-notes/<int:id>/', views.delete_notes_api, name='delete_notes_api')
 ]
