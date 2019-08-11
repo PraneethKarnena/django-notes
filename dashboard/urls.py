@@ -8,4 +8,5 @@ urlpatterns = [
     path('signin/', views.signin_view, name='signin_page'),
     path('signout/', LogoutView.as_view(), name='signout_page'),
     path('dashboard/', views.dashboard_view, name='dashboard_page'),
+    path('api/my-notes/', views.my_notes_api, name='my_notes_api'),
 ]
