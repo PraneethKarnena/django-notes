@@ -7,3 +7,11 @@ class AddNotesSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.NoteModel
         fields = ['title', 'notes']
+
+
+class MyNotesSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.NoteModel
+        fields = '__all__'
+
