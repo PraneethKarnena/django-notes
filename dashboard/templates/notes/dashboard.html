@@ -6,8 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Dashboard - Notes</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js"></script>
 </head>
 
 <body>
@@ -18,7 +22,185 @@
                 <h1>Dashboard - Notes</h1>
             </div>
         </div>
+        <div class="row mt-3">
+            <div class="col-lg-2 text-center">
+                <div id="add-notes">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addNotesModal">Add a
+                        Note</button>
+                    <div class="modal fade" id="addNotesModal" tabindex="-1" role="dialog"
+                        aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Add a Note</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="{% url 'dashboard:add_notes_api' %}" method="post" id="addNotes">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <input type="text" name="title" placeholder="Title" class="form-control"
+                                                required autofocus>
+                                        </div>
+                                        <div class="form-group">
+                                            <textarea placeholder="Write something here..." class="form-control"
+                                                name="notes" id="" rows="10" required></textarea>
+                                        </div>
+                                        <button id="addNotesBtn" type="button" class="btn btn-primary"
+                                            data-dismiss="modal" aria-label="Close">Submit</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-2 text-center">
+                <div id="my-notes"></div>
+            </div>
+        </div>
     </div>
+    <script>
+        $('document').ready(function () {
+
+            // API URLs
+            var ADD_NOTES_URL = "{% url 'dashboard:add_notes_api' %}";
+            var MY_NOTES_URL = "{% url 'dashboard:my_notes_api' %}";
+            var EDIT_NOTES_URL = "/api/edit-notes/";
+            var DELETE_NOTES_URL = "/api/delete-notes/";
+
+            getMyNotes();
+
+            $('body').on('click', '#addNotesBtn', function (e) {
+                var form = $("#addNotes");
+                var title = $("[name='title']", form).val();
+                var notes = $("[name='notes']", form).val();
+                var csrf = $("[name='csrfmiddlewaretoken']", form).val();
+                addNotes(title, notes, csrf);
+            });
+
+            $('body').on('click', '.editNotesBtn', function (e) {
+                var id = $(this).attr('id').split('-')[1];
+                var form = $(`#edit-notes-${id}`);
+                var title = $("[name='title']", form).val();
+                var notes = $("[name='notes']", form).val();
+                var csrf = $("[name='csrfmiddlewaretoken']", form).val();
+                editNotes(id, title, notes, csrf);
+            });
+
+            $('body').on('click', '.deleteNotesBtn', function (e) {
+                var id = $(this).attr('id').split('-')[1];
+                deleteNotes(id);
+            });
+
+            function addNotes(title, notes, csrf) {
+                $.ajax({
+                    method: 'POST',
+                    url: ADD_NOTES_URL,
+                    data: { title: title, notes: notes, csrfmiddlewaretoken: csrf },
+                })
+                    .done(function (data) {
+                        console.log(data);
+                        getMyNotes();
+                    });
+            }
+
+
+            function editNotes(id, title, notes, csrf) {
+                $.ajax({
+                    method: 'POST',
+                    url: `${EDIT_NOTES_URL}${id}/`,
+                    data: { title: title, notes: notes, csrfmiddlewaretoken: csrf },
+                })
+                    .done(function (data) {
+                        console.log(data);
+                        getMyNotes();
+                    });
+            }
+
+            function deleteNotes(id) {
+                $.ajax({
+                    method: 'GET',
+                    url: `${DELETE_NOTES_URL}${id}/`,
+                })
+                    .done(function (data) {
+                        console.log(data);
+                        getMyNotes();
+                    });
+            }
+
+            function getMyNotes() {
+                $.ajax({
+                    method: 'GET',
+                    url: MY_NOTES_URL,
+                    dataType: 'json',
+                })
+                    .done(function (resp) {
+                        var data = resp['data'];
+                        var titlesArr = ``;
+                        var notesModalArr = ``;
+                        for (var i = 0; i < data.length; i++) {
+                            titlesArr = titlesArr + `<button data-toggle="modal" data-target="#modal-${data[i]['id']}" id="${data[i]['id']}" class="dropdown-item my-notes-title" type="button">${data[i]['title']}</button>`;
+                            notesModalArr = notesModalArr + `
+                                        <div class="modal" id="modal-${data[i]['id']}" tabindex="-1" role="dialog"
+                                    aria-labelledby="exampleModalLabel-${data[i]['id']}" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="exampleModalLabel-${data[i]['id']}">${data[i]['title']}</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form action="{% url 'dashboard:add_notes_api' %}" method="post" id="edit-notes-${data[i]['id']}">
+                                                    {% csrf_token %}
+                                                    <div class="form-group">
+                                                        <input value="${data[i]['title']}" type="text" name="title" placeholder="Title" class="form-control"
+                                                            required autofocus>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <textarea placeholder="Write something here..." class="form-control"
+                                                            name="notes" id="" rows="10" required>${data[i]['notes']}</textarea>
+                                                    </div>
+                                                    <div class="form-check mb-3">
+                                                        <input class="form-check-input sharing-check" type="checkbox" value="" id="sharingCheck-${data[i]['id']}">
+                                                        <label class="form-check-label" for="sharingCheck-${data[i]['id']}">
+                                                            Share
+                                                        </label>
+                                                    </div>
+                                                    <button id="editNotesBtn-${data[i]['id']}" type="button" class="btn btn-primary editNotesBtn"
+                                                        data-dismiss="modal" aria-label="Close">Update</button>
+                                                    <button id="deleteNotesBtn-${data[i]['id']}" type="button" class="btn btn-danger deleteNotesBtn"
+                                                    data-dismiss="modal" aria-label="Close">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        var myNotesHtml = `
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                My Notes
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
+                                ${titlesArr}
+                            </div>
+                        </div>
+                        ${notesModalArr}
+                    `;
+                        $('#my-notes').html(myNotesHtml);
+                    });
+            }
+
+        });
+    </script>
 </body>
 
 </html>
