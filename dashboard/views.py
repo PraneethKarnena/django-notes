@@ -6,7 +6,13 @@ from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as django_login
 from django.contrib.auth.decorators import login_required
+from rest_framework.decorators import (api_view, permission_classes)
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 from . import forms
+from . import serializers
+from . import models
 
 
 @require_http_methods(['GET'])
@@ -66,7 +72,57 @@ def signin_view(request):
             return HttpResponseRedirect(reverse('dashboard:signin_page'))
 
 
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(['GET',])
 @login_required
 def dashboard_view(request):
-    pass
+    return render(request, 'notes/dashboard.html')
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_notes_api(request):
+    add_notes_serializer = serializers.AddNotesSerializer(data=request.data)
+    add_notes_serializer.is_valid(raise_exception=True)
+    add_notes_serializer.save(owner=request.user)
+    return Response(data={'success': True, 'data': add_notes_serializer.data}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_notes_api(request):
+    my_notes_queryset = models.NoteModel.objects.filter(owner=request.user)
+    my_notes_serializer = serializers.MyNotesSerializer(my_notes_queryset, many=True)
+    return Response(data={'success': True, 'data': my_notes_serializer.data}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def edit_notes_api(request, id):
+    can_edit = False
+    try:
+        note = models.NoteModel.objects.get(id=id, owner=request.user)
+        can_edit = True
+    except Exception:
+        try:
+            note = models.NoteModel.objects.get(id=id, shared=True, shared_users__user__id=request.user.id)
+            can_edit = True
+        except Exception:
+            pass
+
+    if can_edit:
+        note.title = request.data['title']
+        note.notes = request.data['notes']
+        note.save()
+        return Response(data={'success': True}, status=status.HTTP_200_OK)
+    else:
+        return Response(data={'success': False, 'message': 'ACCESS_DENIED'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def delete_notes_api(request, id):
+    try:
+        _ = models.NoteModel.objects.get(id=id, owner=request.user).delete()
+        return Response(data={'success': True}, status=status.HTTP_200_OK)
+    except Exception:
+        Response(data={'success': False, 'message': 'ACCESS_DENIED'}, status=status.HTTP_401_UNAUTHORIZED)
