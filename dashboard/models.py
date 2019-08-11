@@ -14,7 +14,7 @@ class NoteModel(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, null=False, blank=False)
     notes = models.TextField(null=False, blank=False)
-    created = models.DateField(auto_now=True)
+    created = models.DateField(auto_now_add=True)
     shared_users = models.ManyToManyField(SharingModel)
     shared = models.BooleanField(default=False)
 
