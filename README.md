@@ -20,3 +20,4 @@ A simple Notes app built using Django.
  - User can choose to share notes anytime after creation.
  - Owner of the notes can remove any access level anytime
 
+Demo: [https://django-notes-application.herokuapp.com/](https://django-notes-application.herokuapp.com/)
