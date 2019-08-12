@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as django_login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from rest_framework.decorators import (api_view, permission_classes)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -13,6 +14,7 @@ from rest_framework import status
 from . import forms
 from . import serializers
 from . import models
+import json
 
 
 @require_http_methods(['GET'])
@@ -113,6 +115,21 @@ def edit_notes_api(request, id):
         note.title = request.data['title']
         note.notes = request.data['notes']
         note.save()
+        shared_users_read = request.data.getlist('shared_users_read[]')
+        shared_users_write = request.data.getlist('shared_users_write[]')
+        shared_users_read = list(set(shared_users_read) - set(shared_users_write))
+        shared_users_write = request.data.getlist('shared_users_write[]')
+        if shared_users_read or shared_users_write:
+            note.shared = True
+            for id in shared_users_read:
+                id = int(id)
+                u, _ = models.SharingModel.objects.get_or_create(user_id=id, read=True)
+                note.shared_users.add(u)
+            for id in shared_users_write:
+                id = int(id)
+                u, _ = models.SharingModel.objects.get_or_create(user_id=id, write=True)
+                note.shared_users.add(u)
+            note.save()
         return Response(data={'success': True}, status=status.HTTP_200_OK)
     else:
         return Response(data={'success': False, 'message': 'ACCESS_DENIED'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -126,3 +143,11 @@ def delete_notes_api(request, id):
         return Response(data={'success': True}, status=status.HTTP_200_OK)
     except Exception:
         Response(data={'success': False, 'message': 'ACCESS_DENIED'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_users_api(request):
+    users_queryset = User.objects.all().exclude(id=request.user.id)
+    users_serializer = serializers.UserSerializer(users_queryset, many=True)
+    return Response(data={'success': True, 'data': users_serializer.data}, status=status.HTTP_200_OK)
